@@ -791,6 +791,16 @@ body.qa-on .toast{transform:translate(-50%,-72px)}
 .ls-chip{font-size:12px;padding:2px 10px;border-radius:99px;background:var(--surface-2)}
 .ls-chip.ok{background:#dff3e6;color:#21653f}
 .ls-chip.rev{background:#fdebd3;color:#8a5414}
+.ts-prog i{background:var(--gold);transform:none!important}
+.ts-hint{text-align:center;font-size:15px;padding:10px;border-radius:14px;background:var(--gold-soft)}
+.ts-hint b{font-family:var(--f-text);font-size:22px}
+.ts-text{font-family:var(--f-text);font-size:24px;line-height:2.3;padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--line-2);text-align:justify}
+.ts-w{border:0;background:none;font:inherit;color:inherit;padding:0 2px;border-radius:6px;cursor:pointer}
+.ts-w.wrong{background:#fde2e2;color:#b42318;text-decoration:underline wavy #d64545 1px}
+.ts-w.miss{color:var(--ink-3);text-decoration:line-through;background:var(--surface-2)}
+.ts-w.unclear{background:#fdebd3;color:#8a5414}
+.ts-an{font-size:17px;color:var(--gold);white-space:nowrap}
+.ts-legend .ts-w{font-family:inherit;font-size:12.5px;padding:1px 6px;cursor:default}
 .qr-sheet{position:relative;display:inline-block;line-height:0}
 .qr-hl{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none}
 .qr-hl rect{pointer-events:auto;opacity:.55}
@@ -1377,6 +1387,10 @@ body.qa-on .toast{transform:translate(-50%,-72px)}
 <div class="qr ls" id="lsPanel" hidden role="dialog" aria-modal="true" aria-labelledby="lsTitle">
   <div class="qr-top ls-top"><button class="qr-ic" type="button" data-ls="x" aria-label="إغلاق الدرس">×</button><div class="qr-ttl"><b id="lsTitle">سجّل وقارن</b><small>درس تلاوة مع الشيخ</small></div><span></span></div>
   <div class="ls-body" id="lsBody"></div>
+</div>
+<div class="qr ls" id="tsPanel" hidden role="dialog" aria-modal="true" aria-labelledby="tsTitle">
+  <div class="qr-top ls-top"><button class="qr-ic" type="button" data-ts="x" aria-label="إغلاق">×</button><div class="qr-ttl"><b id="tsTitle">تسميع</b><small>مقارنة تلاوتك بنص السورة</small></div><span></span></div>
+  <div class="ls-body" id="tsBody"></div>
 </div>
 <input type="file" id="qFile" accept="application/pdf,.pdf" hidden>
 <input type="file" id="qAudFile" accept="audio/*,.mp3,.m4a" multiple hidden>
@@ -3055,7 +3069,7 @@ function qOpenPdf() {
 async function qLibLoad() { if (!qLib) { try { qLib = await import(PDFJS); } catch (e) { throw new Error('nolib'); } qLib.GlobalWorkerOptions.workerSrc = PDFJS_W; } return qLib; }
 const qPartP = {};
 /* ملفات مدمجة: في Claude من مخزن الصفحة، وفي الاستضافة الخاصة من مجلد assets بجانب التطبيق */
-const QFILES = {"/_blob/600eb1dbfd0884f6ccde666fd8fc8ff9": "assets/hafs1441-1.pdf", "/_blob/fecf1ed57e4b7fb6432979929e2dd93c": "assets/hafs1441-2.pdf", "/_blob/0a0af1d25cabfcd122b61bfb731019fb": "assets/hafs1441-3.pdf", "/_blob/2fb8c364f4a59cdfcf2cb43cbde65bc5": "assets/hafs1441-4.pdf", "/_blob/4b7849d003c2fc26ddeb902a775219fe": "assets/mushaf-old-1.pdf", "/_blob/313dafca8ff3b612f7faf06877a75d5f": "assets/mushaf-old-2.pdf", "/_blob/96fb7cac8b22f16b8061b29df8c95e5a": "assets/mushaf-old-3.pdf", "/_blob/17d188fb4e87f8d9ef24535b9aaf4144": "assets/mushaf-old-4.pdf", "/_blob/e44de04263fdba842c4e23ef0ef2d14e": "assets/mushaf-old-5.pdf", "/_blob/4d90d1fdb30c8397c3f36b153c15b980": "assets/bukhari-1.pdf", "/_blob/d3d6f9f51e30e060feae4639bc48a6ae": "assets/bukhari-2.pdf", "/_blob/6179ce0608fa6d195bca6e95563b6a76": "assets/bukhari-3.pdf", "/_blob/abf5f9002290d72c7ea8b9234efb66cb": "assets/kahf-ghamdi.mp4"};
+const QFILES = {"/_blob/600eb1dbfd0884f6ccde666fd8fc8ff9": "assets/hafs1441-1.pdf", "/_blob/fecf1ed57e4b7fb6432979929e2dd93c": "assets/hafs1441-2.pdf", "/_blob/0a0af1d25cabfcd122b61bfb731019fb": "assets/hafs1441-3.pdf", "/_blob/2fb8c364f4a59cdfcf2cb43cbde65bc5": "assets/hafs1441-4.pdf", "/_blob/4b7849d003c2fc26ddeb902a775219fe": "assets/mushaf-old-1.pdf", "/_blob/313dafca8ff3b612f7faf06877a75d5f": "assets/mushaf-old-2.pdf", "/_blob/96fb7cac8b22f16b8061b29df8c95e5a": "assets/mushaf-old-3.pdf", "/_blob/17d188fb4e87f8d9ef24535b9aaf4144": "assets/mushaf-old-4.pdf", "/_blob/e44de04263fdba842c4e23ef0ef2d14e": "assets/mushaf-old-5.pdf", "/_blob/4d90d1fdb30c8397c3f36b153c15b980": "assets/bukhari-1.pdf", "/_blob/d3d6f9f51e30e060feae4639bc48a6ae": "assets/bukhari-2.pdf", "/_blob/6179ce0608fa6d195bca6e95563b6a76": "assets/bukhari-3.pdf", "/_blob/abf5f9002290d72c7ea8b9234efb66cb": "assets/kahf-ghamdi.mp4", "/_blob/3334ec415d8c00580da5296f50b91ab4": "assets/fatiha-ghamdi.mp4"};
 let qAssetMode = '';
 async function qAssetUrl(u) {
   if (!/^\/_blob\//.test(u)) return u;
@@ -3547,6 +3561,7 @@ function qHzRow(s) {
 /* ================= صوت الشيخ: الاستماع والتلقين ================= */
 // سور مدمجة: segs = مقاطع عند وقفات القارئ (ملف السورة كاملة)، cues = بدايات الآيات إن توفرت
 const QA_BUILTIN = {
+  1: { url: '/_blob/3334ec415d8c00580da5296f50b91ab4', name: 'الشيخ سعد الغامدي', segs: [0,3.48,6.56,12.12,20.17,25.1,42.02,46] },
   18: { url: '/_blob/abf5f9002290d72c7ea8b9234efb66cb', name: 'الشيخ سعد الغامدي', segs: [0,3.43,9.36,19.91,41.99,58.78,67.62,79.43,96.7,105.83,123.74,130.98,140.9,167.94,174,194.55,206.64,217.9,226.91,234.19,251.08,262.17,277.71,289.11,306.43,323.02,349.55,358.28,374.4,387.97,393.71,402.68,414.54,442.8,457.3,471.72,478.28,496.38,505.51,516.11,529.37,538.62,549.05,554.99,567.36,578.12,586.52,603.58,620.02,643.14,655.9,664.43,679.46,687.56,699.94,709,777.9,793.04,798.87,810.7,822.23,832.33,838.31,848.17,859.27,867.88,895.42,916.98,926.75,930.67,939.47,955.77,964.16,976.85,1000.89,1028.01,1036.83,1048.88,1060.21,1079.24,1096.76,1107.97,1118.41,1130.47,1157.89,1171.19,1181.53,1213.99,1222.11,1244.08,1252.43,1262.83,1278.73,1294.12,1304.49,1319.66,1336.49,1361.3,1373.12,1385.51,1396.51,1405.11,1411.08,1441.49,1454.65,1484.52,1497.32,1506.67,1518.26,1529.38,1538.34,1561.01,1603.9,1622.14,1634.22,1642.59,1658.78,1675.68,1682.57,1689.46,1700.78,1706.62,1718.45,1736.87,1758.09] }
 };
 Q.aud = Object.assign({ name: '', have: {} }, Q.aud || {});
@@ -3720,6 +3735,7 @@ function qListenHtml() {
     '<label>تكرار الجزء المختار<select id="qaRR">' + qaOpts([1, 2, 3, 5], Q.pl.rr, v => D(v) + (v === 1 ? ' مرة' : ' مرات')) + '</select></label>' +
     '<label>السرعة<select id="qaRate">' + qaOpts([0.75, 0.9, 1, 1.15, 1.25], Q.pl.rate, v => String(D(v)).replace('.', S.digits === 'latn' ? '.' : '٫') + '×') + '</select></label></div>' +
     '<button class="btn primary block qa-play" type="button" data-act="q" data-q="aud-play"' + (qaHas(s) ? '' : ' disabled') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>' + (qaHas(s) ? 'ابدأ' : 'لا يوجد صوت لهذه السورة') + '</button>' +
+    (QTXT[s] ? '<button class="btn block qa-lesson" type="button" data-act="q" data-q="ts-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M15.5 17l2 2 4-4"/></svg>تسميع بالكلمات</button><p class="note">تتلو من حفظك، فيقارن كلماتك بنص السورة ويعطيك النتيجة والنصيحة.</p>' : '') +
     (qaHas(s) ? '<button class="btn block qa-lesson" type="button" data-act="q" data-q="ls-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>درس «سجّل وقارن»</button><p class="note">يتلو الشيخ، ثم تسجّل تلاوتك، فتسمعها مقابل تلاوته وتقيّم نفسك. وفي نهاية الدرس نتيجة ونصيحة.</p>' : '') + '</div>';
   h += '<p class="note">يستمر الصوت والجوال مقفل، وتظهر أزرار التشغيل والآية الحالية على شاشة القفل، في Safari وChrome على الجوال. داخل نسخة Claude قد يتوقف الصوت عند قفل الجوال. والاستماع يُسجَّل في السجل، ويظهر عدد مرات استماعك لكل سورة في متابعة الحفظ.</p>';
   return h;
@@ -3896,9 +3912,176 @@ document.addEventListener('click', e => {
 })();
 function qLessonLogHtml() {
   if (!Q.lessons.length) return '';
-  return '<h3 class="q-h">دروس «سجّل وقارن»</h3><div class="q-tbl" role="table" aria-label="سجل الدروس"><div class="q-tr q-th" role="row"><span role="columnheader">اليوم</span><span role="columnheader">السورة</span><span role="columnheader">الموضع</span><span role="columnheader">النتيجة</span></div>' +
-    Q.lessons.slice(0, 30).map(l => '<div class="q-tr" role="row"><span role="cell">' + qDayFmt(l.ts) + '</span><span role="cell">' + SURAH_NAMES[l.s - 1] + '</span><span role="cell">' + (l.k === 'seg' ? 'م ' : '') + D(l.from) + '–' + D(l.to) + '</span><span role="cell"><b>' + qPct(l.score) + '</b><small>' + D(l.ok) + '/' + D(l.n) + '</small></span></div>').join('') + '</div>';
+  return '<h3 class="q-h">دروس التسميع و«سجّل وقارن»</h3><div class="q-tbl" role="table" aria-label="سجل الدروس"><div class="q-tr q-th" role="row"><span role="columnheader">اليوم</span><span role="columnheader">السورة</span><span role="columnheader">الموضع</span><span role="columnheader">النتيجة</span></div>' +
+    Q.lessons.slice(0, 30).map(l => '<div class="q-tr" role="row"><span role="cell">' + qDayFmt(l.ts) + '</span><span role="cell">' + SURAH_NAMES[l.s - 1] + '</span><span role="cell">' + (l.k === 'w' ? 'تسميع ' : l.k === 'seg' ? 'م ' : '') + D(l.from) + '–' + D(l.to) + '</span><span role="cell"><b>' + qPct(l.score) + '</b><small>' + D(l.ok) + '/' + D(l.n) + (l.k === 'w' ? ' كلمة' : '') + '</small></span></div>').join('') + '</div>';
 }
+
+/* ================= التسميع بالكلمات: مقارنة تلاوتك بنص السورة ================= */
+// النص من مشروع تنزيل (Tanzil Quran Text, Simple Clean 1.1) — tanzil.net — منسوخ كما هو دون تغيير
+const QTXT_SRC = 'مشروع تنزيل tanzil.net (النص الإملائي المجرد، الإصدار 1.1)';
+const QTXT = {
+  1: ['بسم الله الرحمن الرحيم', 'الحمد لله رب العالمين', 'الرحمن الرحيم', 'مالك يوم الدين', 'إياك نعبد وإياك نستعين', 'اهدنا الصراط المستقيم', 'صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين']
+};
+const TS = { on: false, s: 1, from: 1, to: 7, words: [], heard: '', interim: '', rec: null, listening: false, phase: 'ready', res: null, hint: 0, t0: 0 };
+const tsSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+function qNorm(w) {
+  return String(w || '').replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[^\u0621-\u064A]/g, '');
+}
+function qSim(a, b) {
+  if (a === b) return 1; if (!a || !b) return 0;
+  const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return 1 - d[m][n] / Math.max(m, n);
+}
+function tsRefWords(s, from, to) {
+  const out = [];
+  QTXT[s].slice(from - 1, to).forEach((ay, k) => ay.split(/\s+/).forEach((w, i) => out.push({ w, n: qNorm(w), a: from + k, first: i === 0 })));
+  return out;
+}
+// محاذاة الكلمات المسموعة مع كلمات السورة (مسافة تحرير على مستوى الكلمة)
+function tsAlign(ref, hyp) {
+  const n = ref.length, m = hyp.length, INF = 1e9;
+  const C = Array.from({ length: n + 1 }, () => new Float64Array(m + 1)), B = Array.from({ length: n + 1 }, () => new Uint8Array(m + 1));
+  for (let i = 1; i <= n; i++) { C[i][0] = i; B[i][0] = 2; }
+  for (let j = 1; j <= m; j++) { C[0][j] = 0; B[0][j] = 3; }   // ما يُقال قبل البداية (كالاستعاذة) لا يُحسب خطأ
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+    const s = qSim(ref[i - 1].n, hyp[j - 1]), sub = s >= 0.999 ? 0 : s >= 0.6 ? 0.5 : 1;
+    let best = C[i - 1][j - 1] + sub, b = 1;
+    if (C[i - 1][j] + 1 < best) { best = C[i - 1][j] + 1; b = 2; }
+    if (C[i][j - 1] + (i === n ? 0.15 : 0.8) < best) { best = C[i][j - 1] + (i === n ? 0.15 : 0.8); b = 3; }
+    C[i][j] = best; B[i][j] = b;
+  }
+  let i = n, j = m; const st = ref.map(r => ({ r, st: 'miss', heard: '' })), extra = [];
+  while (i > 0 || j > 0) {
+    const b = B[i][j];
+    if (i > 0 && j > 0 && b === 1) { const s = qSim(ref[i - 1].n, hyp[j - 1]); st[i - 1].st = s >= 0.999 ? 'ok' : s >= 0.6 ? 'unclear' : 'wrong'; st[i - 1].heard = hyp[j - 1]; i--; j--; }
+    else if (i > 0 && (j === 0 || b === 2)) { st[i - 1].st = 'miss'; i--; }
+    else { if (i > 0 && i < n) extra.push({ after: i - 1, w: hyp[j - 1] }); j--; }
+  }
+  return { st, extra };
+}
+function tsScore(R) {
+  const n = R.st.length, ok = R.st.filter(x => x.st === 'ok').length, un = R.st.filter(x => x.st === 'unclear').length;
+  return n ? Math.round((ok + un * 0.5) / n * 100) : 0;
+}
+function tsAdvice(R) {
+  const tips = [], bad = R.st.filter(x => x.st === 'miss' || x.st === 'wrong'), un = R.st.filter(x => x.st === 'unclear');
+  const byAyah = {}; bad.forEach(x => { byAyah[x.r.a] = (byAyah[x.r.a] || 0) + 1; });
+  const score = tsScore(R);
+  if (score >= 95) tips.push('حفظك لهذا المقطع ممتاز بالكلمات. ثبّته بالمراجعة، وراجع تجويده مع الشيخ أو مدرّسك.');
+  else if (score >= 80) tips.push('حفظك جيد، وفيه مواضع قليلة تحتاج تثبيتًا.');
+  else tips.push('المقطع يحتاج مراجعة قبل الانتقال لما بعده. استمع إليه مع التلقين ثم أعد التسميع.');
+  const worst = Object.keys(byAyah).sort((a, b) => byAyah[b] - byAyah[a]);
+  if (worst.length) tips.push('أكثر الأخطاء في ' + worst.slice(0, 3).map(a => 'الآية ' + D(a)).join('، ') + '. كرّرها وحدها خمس مرات ثم صِلها بما قبلها.');
+  const starts = bad.filter(x => x.r.first && x.r.a > TS.from);
+  if (starts.length) tips.push('تعثّرت في بداية ' + starts.map(x => 'الآية ' + D(x.r.a)).join('، ') + '. اربط آخر كل آية بأول التي تليها، فهذا أكثر ما يُنسى في الحفظ.');
+  if (R.extra.length >= 2) tips.push('زدتَ كلمات ليست في الموضع، وقد تكون تكرارًا أو ترددًا. تلُ بهدوء دون أن تعيد.');
+  if (un.length >= 2) tips.push('بعض الكلمات لم تتضح للجهاز. تمهّل وارفع صوتك قليلًا وابتعد عن الضوضاء، وإن كنت متأكدًا منها فاضغط عليها لتصحيح الحكم.');
+  return tips;
+}
+function tsOpen(s, from, to) {
+  if (!QTXT[s]) { toast('نص هذه السورة غير متوفر للتسميع بعد'); return; }
+  Object.assign(TS, { on: true, s, from: Math.max(1, from || 1), to: Math.min(QTXT[s].length, to || QTXT[s].length), heard: '', interim: '', phase: 'ready', res: null, hint: 0 });
+  TS.words = tsRefWords(s, TS.from, TS.to);
+  $('#tsPanel').hidden = false; document.body.classList.add('q-lock');
+  tsRender();
+}
+function tsClose() { tsStop(true); TS.on = false; $('#tsPanel').hidden = true; document.body.classList.remove('q-lock'); if (curView === 'adhkar' && !$('#mushaf').hidden) renderMushaf(); }
+function tsStart() {
+  const SR = tsSR();
+  if (!SR) { toast('التعرّف على الصوت غير مدعوم هنا. افتح ميقات في Chrome أو Safari على الجوال.'); return; }
+  TS.heard = ''; TS.interim = ''; TS.hint = 0; TS.phase = 'listen'; TS.t0 = Date.now(); TS.listening = true;
+  const rec = new SR(); TS.rec = rec;
+  rec.lang = 'ar-SA'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec.onresult = e => {
+    let fin = '', intr = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += ' ' + r[0].transcript; else intr += ' ' + r[0].transcript; }
+    if (fin) TS.heard += ' ' + fin;
+    TS.interim = intr; tsLive();
+  };
+  rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { TS.listening = false; toast('لم يُسمح بالميكروفون. اسمح به من إعدادات الموقع في المتصفح.'); TS.phase = 'ready'; tsRender(); } else if (e.error === 'network') { toast('التعرّف على الصوت يحتاج اتصالًا بالإنترنت.'); } };
+  rec.onend = () => { if (TS.listening) { try { rec.start(); } catch (er) {} } };
+  try { rec.start(); } catch (e) { toast('تعذّر تشغيل الميكروفون'); TS.phase = 'ready'; }
+  tsRender();
+}
+function tsStop(silent) {
+  TS.listening = false;
+  if (TS.rec) { try { TS.rec.onend = null; TS.rec.stop(); } catch (e) {} TS.rec = null; }
+  if (silent || TS.phase !== 'listen') return;
+  setTimeout(tsFinish, 600);
+}
+function tsHyp() { return (TS.heard + ' ' + TS.interim).split(/\s+/).map(qNorm).filter(Boolean); }
+function tsLive() {
+  const R = tsAlign(TS.words, tsHyp()), done = R.st.filter(x => x.st !== 'miss').length;
+  let last = -1; R.st.forEach((x, i) => { if (x.st !== 'miss') last = i; });
+  const el = $('#tsLive'); if (el) el.textContent = D(Math.min(TS.words.length, last + 1)) + ' من ' + D(TS.words.length) + ' كلمة';
+  const bar = $('#tsBar'); if (bar) bar.style.width = ((last + 1) / TS.words.length * 100).toFixed(1) + '%';
+  TS.pos = last + 1;
+  if (TS.pos >= TS.words.length && done >= TS.words.length * 0.9 && TS.listening) { tsStop(); }
+}
+function tsFinish() {
+  const R = tsAlign(TS.words, tsHyp());
+  TS.res = R; TS.phase = 'result';
+  tsSave(); tsRender();
+}
+function tsSave() {
+  const R = TS.res, n = R.st.length;
+  const rec = { ts: Date.now(), d: today.key, s: TS.s, k: 'w', from: TS.from, to: TS.to, n, ok: R.st.filter(x => x.st === 'ok').length, score: tsScore(R), rev: [...new Set(R.st.filter(x => x.st === 'miss' || x.st === 'wrong').map(x => x.r.a))] };
+  if (TS.saved) Q.lessons[0] = rec; else Q.lessons.unshift(rec);
+  TS.saved = true; Q.lessons = Q.lessons.slice(0, 100); saveQ();
+}
+function tsRender() {
+  const box = $('#tsBody'); if (!box) return;
+  $('#tsTitle').textContent = 'تسميع ' + SURAH_NAMES[TS.s - 1];
+  const ay = QTXT[TS.s].length;
+  if (TS.phase === 'ready') {
+    TS.saved = false;
+    box.innerHTML = '<div class="ls-stage"><span class="ls-ic">' + QI.book + '</span><b>سمّع من حفظك</b><small>أغلق المصحف واتلُ ' + (TS.from === 1 && TS.to === ay ? 'السورة كاملة' : 'الآيات من ' + D(TS.from) + ' إلى ' + D(TS.to)) + '. يستمع التطبيق ويقارن كلماتك بنص السورة، ثم يعطيك النتيجة والنصيحة.</small></div>' +
+      '<div class="qa-grid"><label>من الآية<select id="tsFrom">' + qaOpts(Array.from({ length: ay }, (_, i) => i + 1), TS.from, D) + '</select></label><label>إلى الآية<select id="tsTo">' + qaOpts(Array.from({ length: ay }, (_, i) => i + 1), TS.to, D) + '</select></label></div>' +
+      '<button class="btn primary block" type="button" data-ts="start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>ابدأ التسميع</button>' +
+      '<p class="note">يقارن الكلمات فقط ولا يحكم على التجويد. والتعرّف على الصوت قد يخطئ أحيانًا، فما لم يتضح يظهر لك «لم تتضح» لا «خطأ». يحتاج إنترنت وإذن الميكروفون، ويعمل في Chrome وSafari على الجوال.</p><p class="note">نص السورة: ' + QTXT_SRC + '.</p>';
+    return;
+  }
+  if (TS.phase === 'listen') {
+    const next = TS.words[Math.min(TS.words.length - 1, (TS.pos || 0) + TS.hint)];
+    box.innerHTML = '<div class="ls-stage ph-rec"><span class="ls-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span><b>أستمع إليك…</b><small id="tsLive">' + D(0) + ' من ' + D(TS.words.length) + ' كلمة</small><div class="ls-meter ts-prog"><i id="tsBar" style="width:0%"></i></div></div>' +
+      (TS.hint ? '<div class="ts-hint">الكلمة التالية: <b>' + qEsc(next.w) + '</b></div>' : '') +
+      '<div class="ls-tools"><button type="button" data-ts="hint">تلميح بالكلمة التالية</button><button type="button" data-ts="stop">انتهيت</button><button type="button" data-ts="cancel">إلغاء</button></div>';
+    tsLive(); return;
+  }
+  const R = TS.res, score = tsScore(R), tips = tsAdvice(R);
+  const cnt = k => R.st.filter(x => x.st === k).length;
+  let words = '';
+  let curA = 0;
+  R.st.forEach((x, i) => {
+    if (x.r.a !== curA) { if (curA) words += '<span class="ts-an">﴿' + D(curA) + '﴾</span> '; curA = x.r.a; }
+    words += '<button type="button" class="ts-w ' + x.st + '" data-ts="toggle" data-i="' + i + '" title="' + (x.st === 'wrong' || x.st === 'unclear' ? 'سُمعت: ' + qEsc(x.heard) : '') + '">' + qEsc(x.r.w) + '</button> ';
+  });
+  words += '<span class="ts-an">﴿' + D(curA) + '﴾</span>';
+  box.innerHTML = '<div class="ls-score"><b>' + qPct(score) + '</b><span>' + (score >= 95 ? 'ممتاز' : score >= 85 ? 'جيد جدًا' : score >= 70 ? 'جيد' : 'يحتاج مراجعة') + '</span><small>' + D(cnt('ok')) + ' صحيحة · ' + D(cnt('wrong')) + ' مبدّلة · ' + D(cnt('miss')) + ' منسية · ' + D(cnt('unclear')) + ' لم تتضح' + (R.extra.length ? ' · ' + D(R.extra.length) + ' زائدة' : '') + '</small></div>' +
+    '<div class="ts-text" dir="rtl">' + words + '</div>' +
+    '<p class="note ts-legend"><span class="ts-w ok">صحيحة</span> <span class="ts-w wrong">مبدّلة</span> <span class="ts-w miss">منسية</span> <span class="ts-w unclear">لم تتضح</span> · اضغط على أي كلمة لتصحيح الحكم إن أخطأ الجهاز.</p>' +
+    '<h3 class="q-h">النصيحة</h3><ul class="ls-tips">' + tips.map(t => '<li>' + t + '</li>').join('') + '</ul>' +
+    '<p class="note">هذه مقارنة لكلمات حفظك فقط، والتجويد يُصحَّح عند مدرّس متقن.</p>' +
+    '<div class="ls-rate"><button class="btn primary" type="button" data-ts="again">أعد التسميع</button><button class="btn" type="button" data-ts="close">إنهاء</button></div>';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-ts]'); if (!b) return;
+  const k = b.dataset.ts;
+  if (k === 'x' || k === 'close') tsClose();
+  else if (k === 'start') tsStart();
+  else if (k === 'stop') tsStop();
+  else if (k === 'cancel') { tsStop(true); TS.phase = 'ready'; tsRender(); }
+  else if (k === 'hint') { TS.hint = 1; tsRender(); setTimeout(() => { TS.hint = 0; if (TS.phase === 'listen') tsRender(); }, 4000); }
+  else if (k === 'again') { TS.phase = 'ready'; tsRender(); }
+  else if (k === 'toggle' && TS.res) { const x = TS.res.st[+b.dataset.i]; x.st = x.st === 'ok' ? (x.heard ? 'wrong' : 'miss') : 'ok'; tsSave(); tsRender(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'tsFrom') { TS.from = +t.value; if (TS.to < TS.from) TS.to = TS.from; TS.words = tsRefWords(TS.s, TS.from, TS.to); tsRender(); }
+  else if (t.id === 'tsTo') { TS.to = +t.value; if (TS.from > TS.to) TS.from = TS.to; TS.words = tsRefWords(TS.s, TS.from, TS.to); tsRender(); }
+});
 
 function renderMushaf() {
   $$('#adMode button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'mushaf')));
@@ -3922,6 +4105,7 @@ function qAct(a) {
     case 'aud-mode': Q.pl.mode = a.dataset.m; Object.assign(Q.pl, QA_MODES[a.dataset.m]); saveQ(); renderMushaf(); break;
     case 'aud-play': qaStart(qaSel.s, qaSel.from, qaSel.to); break;
     case 'ls-start': lsStart(qaSel.s, qaSel.from, qaSel.to); break;
+    case 'ts-open': tsOpen(qaSel.s, 1, QTXT[qaSel.s] ? QTXT[qaSel.s].length : 1); break;
     case 'aud-part': qaSel = { s: +a.dataset.s, from: +a.dataset.a, to: +a.dataset.b };
       if (qaKind(qaSel.s) === 'seg') { const N = qaCount(qaSel.s), A = AYAHS[qaSel.s - 1]; qaSel.from = Math.max(1, Math.round((qaSel.from - 1) / A * N) + 1); qaSel.to = qaSel.to >= A ? N : Math.max(qaSel.from, Math.round(qaSel.to / A * N)); toast('بدأ التلقين من المقطع ' + D(qaSel.from) + '، وهو موضع تقريبي لبداية هذا الجزء'); } Q.pl.mode = 'talqin'; Object.assign(Q.pl, QA_MODES.talqin); saveQ(); if (qaHas(qaSel.s)) qaStart(qaSel.s, qaSel.from, qaSel.to); else { qTab = 'listen'; renderMushaf(); toast('أضف صوت الشيخ لهذه السورة أولًا'); } break;
     case 'src': if (a.dataset.v === 'file' && !Q.file) { $('#qFile').click(); break; } Q.src = a.dataset.v; Q.edChosen = true; saveQ(); renderMushaf(); try { renderSvc(); } catch (e) {} if (QED[Q.src]) toast('المصحف المعروض الآن: ' + QED[Q.src].name); break;
