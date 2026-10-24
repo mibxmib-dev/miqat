@@ -801,6 +801,14 @@ body.qa-on .toast{transform:translate(-50%,-72px)}
 .ts-w.unclear{background:#fdebd3;color:#8a5414}
 .ts-an{font-size:17px;color:var(--gold);white-space:nowrap}
 .ts-legend .ts-w{font-family:inherit;font-size:12.5px;padding:1px 6px;cursor:default}
+.ts-text.uth{font-family:'Amiri Quran','KFGQPC Uthmanic Script HAFS',var(--f-text);font-size:26px;line-height:2.5}
+.ts-text .ts-an{display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gold);font-size:14px;font-family:var(--f-ui,inherit);vertical-align:middle;margin:0 2px}
+.ts-onmushaf{margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px}
+.ts-onmushaf svg{width:20px;height:20px}
+.qr-hl rect.qr-mk{pointer-events:none;opacity:.5}
+.qr-hl rect.mk-wrong{fill:#e5484d}
+.qr-hl rect.mk-miss{fill:#8b8d98}
+.qr-hl rect.mk-unclear{fill:#f5a524}
 .qr-sheet{position:relative;display:inline-block;line-height:0}
 .qr-hl{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none}
 .qr-hl rect{pointer-events:auto;opacity:.55}
@@ -3296,6 +3304,11 @@ function qPaintHL(box, p, cv) {
     const y = g ? g.cs[g.cs.reduce((k, c, i) => Math.abs(c - qHl.a.y) < Math.abs(g.cs[k] - qHl.a.y) ? i : k, 0)] : qHl.a.y, hh = g ? g.m * 0.47 : 0.02;
     out += '<rect class="qr-hl-mark" x="' + (qHl.a.x * 1000 - 3).toFixed(1) + '" y="' + ((y - hh) * 1000).toFixed(1) + '" width="6" height="' + (hh * 2000).toFixed(1) + '" fill="' + QHL[qHl.color] + '"/>';
   }
+  if (QMARK && QMARK.p === p && QMARK.src === src) QMARK.list.forEach(m => {
+    if (m.st === 'ok') return;
+    const [x0, y0, x1, y1] = m.box;
+    out += '<rect class="qr-mk mk-' + m.st + '" x="' + (x0 * 1000).toFixed(1) + '" y="' + (y0 * 1000).toFixed(1) + '" width="' + ((x1 - x0) * 1000).toFixed(1) + '" height="' + ((y1 - y0) * 1000).toFixed(1) + '" rx="6"/>';
+  });
   svg.innerHTML = out;
 }
 function qRepaint(p) { $$('#qrStage [data-p="' + p + '"]').forEach(box => { if (box.querySelector('canvas')) qPaintHL(box, p); }); }
@@ -3397,6 +3410,7 @@ async function qOpen(p, browse) {
   requestAnimationFrame(() => qGo(p));
 }
 function qClose() {
+  QMARK = null;
   qHlToggle(false);
   qEndSession();
   if (qObs) { qObs.disconnect(); qObs = null; }
@@ -3922,6 +3936,11 @@ const QTXT_SRC = 'مشروع تنزيل tanzil.net (النص الإملائي ا
 const QTXT = {
   1: ['بسم الله الرحمن الرحيم', 'الحمد لله رب العالمين', 'الرحمن الرحيم', 'مالك يوم الدين', 'إياك نعبد وإياك نستعين', 'اهدنا الصراط المستقيم', 'صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين']
 };
+// الرسم العثماني للعرض، مطابَق بصريًا مع صفحة الفاتحة في مصحف المدينة طبعة ١٤٤١ (المقارنة نفسها تتم على نص تنزيل أعلاه)
+const QUTH = { 1: ["بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ", "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ", "ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ", "مَـٰلِكِ يَوْمِ ٱلدِّينِ", "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ", "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ", "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ"] };
+// مواضع كلمات الفاتحة على صفحة ١ من طبعة ١٤٤١ (نسب من عرض الصفحة وارتفاعها: يسار، أعلى، يمين، أسفل)
+const QWORDBOX = { b1441: { 1: { p: 1, boxes: [[0.585, 0.358, 0.628, 0.408], [0.537, 0.358, 0.585, 0.408], [0.475, 0.358, 0.537, 0.408], [0.412, 0.358, 0.475, 0.408], [0.585, 0.402, 0.668, 0.449], [0.545, 0.402, 0.585, 0.449], [0.5, 0.402, 0.545, 0.449], [0.372, 0.402, 0.5, 0.449], [0.645, 0.44, 0.716, 0.488], [0.548, 0.44, 0.645, 0.488], [0.47, 0.44, 0.522, 0.488], [0.425, 0.44, 0.47, 0.488], [0.326, 0.44, 0.425, 0.488], [0.645, 0.481, 0.722, 0.523], [0.59, 0.481, 0.645, 0.523], [0.52, 0.481, 0.59, 0.523], [0.405, 0.481, 0.52, 0.523], [0.288, 0.481, 0.367, 0.523], [0.635, 0.515, 0.702, 0.562], [0.517, 0.515, 0.635, 0.562], [0.43, 0.515, 0.492, 0.562], [0.375, 0.515, 0.43, 0.562], [0.296, 0.515, 0.375, 0.562], [0.615, 0.556, 0.667, 0.605], [0.573, 0.556, 0.615, 0.605], [0.47, 0.556, 0.573, 0.605], [0.352, 0.556, 0.47, 0.605], [0.573, 0.596, 0.612, 0.639], [0.443, 0.596, 0.573, 0.639]] } } };
+let QMARK = null;
 const TS = { on: false, s: 1, from: 1, to: 7, words: [], heard: '', interim: '', rec: null, listening: false, phase: 'ready', res: null, hint: 0, t0: 0 };
 const tsSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 function qNorm(w) {
@@ -3981,6 +4000,7 @@ function tsAdvice(R) {
   return tips;
 }
 function tsOpen(s, from, to) {
+  if (!document.getElementById('amiriQuranFont')) { const l = document.createElement('link'); l.id = 'amiriQuranFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap'; document.head.appendChild(l); }
   if (!QTXT[s]) { toast('نص هذه السورة غير متوفر للتسميع بعد'); return; }
   Object.assign(TS, { on: true, s, from: Math.max(1, from || 1), to: Math.min(QTXT[s].length, to || QTXT[s].length), heard: '', interim: '', phase: 'ready', res: null, hint: 0 });
   TS.words = tsRefWords(s, TS.from, TS.to);
@@ -4054,13 +4074,15 @@ function tsRender() {
   const cnt = k => R.st.filter(x => x.st === k).length;
   let words = '';
   let curA = 0;
+  const uw = QUTH[TS.s] ? QUTH[TS.s].slice(TS.from - 1, TS.to).join(' ').split(/\s+/) : null;
   R.st.forEach((x, i) => {
-    if (x.r.a !== curA) { if (curA) words += '<span class="ts-an">﴿' + D(curA) + '﴾</span> '; curA = x.r.a; }
-    words += '<button type="button" class="ts-w ' + x.st + '" data-ts="toggle" data-i="' + i + '" title="' + (x.st === 'wrong' || x.st === 'unclear' ? 'سُمعت: ' + qEsc(x.heard) : '') + '">' + qEsc(x.r.w) + '</button> ';
+    if (x.r.a !== curA) { if (curA) words += '<span class="ts-an">' + D(curA) + '</span> '; curA = x.r.a; }
+    words += '<button type="button" class="ts-w ' + x.st + '" data-ts="toggle" data-i="' + i + '" title="' + (x.st === 'wrong' || x.st === 'unclear' ? 'سُمعت: ' + qEsc(x.heard) : '') + '">' + qEsc(uw && uw[i] ? uw[i] : x.r.w) + '</button> ';
   });
-  words += '<span class="ts-an">﴿' + D(curA) + '﴾</span>';
+  words += '<span class="ts-an">' + D(curA) + '</span>';
   box.innerHTML = '<div class="ls-score"><b>' + qPct(score) + '</b><span>' + (score >= 95 ? 'ممتاز' : score >= 85 ? 'جيد جدًا' : score >= 70 ? 'جيد' : 'يحتاج مراجعة') + '</span><small>' + D(cnt('ok')) + ' صحيحة · ' + D(cnt('wrong')) + ' مبدّلة · ' + D(cnt('miss')) + ' منسية · ' + D(cnt('unclear')) + ' لم تتضح' + (R.extra.length ? ' · ' + D(R.extra.length) + ' زائدة' : '') + '</small></div>' +
-    '<div class="ts-text" dir="rtl">' + words + '</div>' +
+    '<div class="ts-text' + (QUTH[TS.s] ? ' uth' : '') + '" dir="rtl">' + words + '</div>' +
+    (QWORDBOX.b1441[TS.s] ? '<button class="btn block ts-onmushaf" type="button" data-ts="onmushaf">' + QI.book + 'اعرض النتيجة على صفحة المصحف</button>' : '') +
     '<p class="note ts-legend"><span class="ts-w ok">صحيحة</span> <span class="ts-w wrong">مبدّلة</span> <span class="ts-w miss">منسية</span> <span class="ts-w unclear">لم تتضح</span> · اضغط على أي كلمة لتصحيح الحكم إن أخطأ الجهاز.</p>' +
     '<h3 class="q-h">النصيحة</h3><ul class="ls-tips">' + tips.map(t => '<li>' + t + '</li>').join('') + '</ul>' +
     '<p class="note">هذه مقارنة لكلمات حفظك فقط، والتجويد يُصحَّح عند مدرّس متقن.</p>' +
@@ -4075,6 +4097,14 @@ document.addEventListener('click', e => {
   else if (k === 'cancel') { tsStop(true); TS.phase = 'ready'; tsRender(); }
   else if (k === 'hint') { TS.hint = 1; tsRender(); setTimeout(() => { TS.hint = 0; if (TS.phase === 'listen') tsRender(); }, 4000); }
   else if (k === 'again') { TS.phase = 'ready'; tsRender(); }
+  else if (k === 'onmushaf' && TS.res) {
+    const WB = QWORDBOX.b1441[TS.s]; if (!WB) return;
+    const first = TS.words.length ? tsRefWords(TS.s, 1, TS.from - 1 || 0).length : 0;
+    const off = TS.from > 1 ? tsRefWords(TS.s, 1, TS.from - 1).length : 0;
+    QMARK = { src: 'b1441', p: WB.p, list: TS.res.st.map((x, i) => ({ box: WB.boxes[off + i], st: x.st })).filter(m => m.box) };
+    if (qSrcNow() !== 'b1441') { Q.src = 'b1441'; Q.edChosen = true; saveQ(); toast('تظهر علامات التسميع على طبعة ١٤٤١'); }
+    tsClose(); qOpen(WB.p, true);
+  }
   else if (k === 'toggle' && TS.res) { const x = TS.res.st[+b.dataset.i]; x.st = x.st === 'ok' ? (x.heard ? 'wrong' : 'miss') : 'ok'; tsSave(); tsRender(); }
 });
 document.addEventListener('change', e => {
