@@ -791,6 +791,7 @@ body.qa-on .toast{transform:translate(-50%,-72px)}
 .ls-chip{font-size:12px;padding:2px 10px;border-radius:99px;background:var(--surface-2)}
 .ls-chip.ok{background:#dff3e6;color:#21653f}
 .ls-chip.rev{background:#fdebd3;color:#8a5414}
+.ts-calm{display:block;max-width:300px;margin:0 auto 4px}
 .ts-prog i{background:var(--gold);transform:none!important}
 .ts-hint{text-align:center;font-size:15px;padding:10px;border-radius:14px;background:var(--gold-soft)}
 .ts-hint b{font-family:var(--f-text);font-size:22px}
@@ -3808,7 +3809,7 @@ function lsRecord() {
   LS.rec.ondataavailable = e => { if (e.data && e.data.size) LS.chunks.push(e.data); };
   LS.rec.onstop = () => lsRecorded();
   LS.rec.start(200);
-  const t0 = performance.now(), maxT = Math.max(6, (u.sd || 4) * 2.6 + 3);
+  const t0 = performance.now(), maxT = Math.max(10, (u.sd || 4) * 3 + 8);
   const buf = new Float32Array(1024);
   clearInterval(LS.tick);
   LS.tick = setInterval(() => {
@@ -3820,7 +3821,7 @@ function lsRecord() {
     if (voiced) { if (LS.vStart < 0) LS.vStart = t; if (LS.inGap > 1.2) LS.gaps++; LS.inGap = 0; LS.vEnd = t; }
     else if (LS.vStart >= 0) LS.inGap = t - LS.vEnd;
     const m = $('#lsMeter'); if (m) m.style.transform = 'scaleX(' + Math.min(1, rms * 9).toFixed(3) + ')';
-    if ((LS.vStart >= 0 && LS.inGap > 1.9) || t > maxT) lsStopRec();
+    if ((LS.vStart >= 0 && LS.inGap > 3.5) || t > maxT) lsStopRec();
   }, 60);
   lsRender();
 }
@@ -3898,7 +3899,7 @@ function lsRender() {
     return;
   }
   const u = lsUnit() || { sd: 0, md: 0 };
-  const steps = { sheikh: ['استمع للشيخ', 'ركّز في الوقف والمد والغنة.'], rec: ['دورك الآن', 'تلُ ' + (qaKind(LS.s) === 'seg' ? 'المقطع' : 'الآية') + ' كما سمعتها، ويتوقف التسجيل وحده حين تسكت.'], me: ['استمع لتلاوتك', 'قارنها بما سمعته من الشيخ.'], rate: ['كيف كانت تلاوتك؟', 'قيّم نفسك بصدق بعد المقارنة.'], silent: ['لم أسمع صوتك', 'تأكد من الميكروفون ثم أعد التسجيل.'] }[LS.phase] || ['', ''];
+  const steps = { sheikh: ['استمع للشيخ', 'ركّز في الوقف والمد والغنة.'], rec: ['دورك الآن', 'تلُ ' + (qaKind(LS.s) === 'seg' ? 'المقطع' : 'الآية') + ' كما سمعتها. يتوقف التسجيل بعد سكوتك ثلاث ثوانٍ ونصف، أو حين تضغط «انتهيت».'], me: ['استمع لتلاوتك', 'قارنها بما سمعته من الشيخ.'], rate: ['كيف كانت تلاوتك؟', 'قيّم نفسك بصدق بعد المقارنة.'], silent: ['لم أسمع صوتك', 'تأكد من الميكروفون ثم أعد التسجيل.'] }[LS.phase] || ['', ''];
   box.innerHTML = '<div class="ls-prog">' + lsName(LS.a) + ' · ' + D(LS.a - LS.from + 1) + ' من ' + D(LS.to - LS.from + 1) + '</div>' +
     '<div class="ls-stage ph-' + LS.phase + '"><span class="ls-ic">' + (LS.phase === 'rec' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') + '</span><b>' + steps[0] + '</b><small>' + steps[1] + '</small>' +
     (LS.phase === 'rec' ? '<div class="ls-meter"><i id="lsMeter"></i></div><button class="btn sm" type="button" data-ls="stop">انتهيت</button>' : '') + '</div>' +
@@ -4011,34 +4012,51 @@ function tsClose() { tsStop(true); TS.on = false; $('#tsPanel').hidden = true; d
 function tsStart() {
   const SR = tsSR();
   if (!SR) { toast('التعرّف على الصوت غير مدعوم هنا. افتح ميقات في Chrome أو Safari على الجوال.'); return; }
-  TS.heard = ''; TS.interim = ''; TS.hint = 0; TS.phase = 'listen'; TS.t0 = Date.now(); TS.listening = true;
+  TS.heard = ''; TS.cur = ''; TS.interim = ''; TS.hint = 0; TS.phase = 'listen'; TS.t0 = Date.now(); TS.listening = true; TS.fails = 0;
+  tsSession();
+  tsRender();
+}
+// جلسة استماع؛ متصفح الجوال ينهيها عند السكوت، فنبدأ غيرها تلقائيًا حتى تضغط «انتهيت»
+function tsSession() {
+  const SR = tsSR(); if (!SR || !TS.listening) return;
   const rec = new SR(); TS.rec = rec;
   rec.lang = 'ar-SA'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
   rec.onresult = e => {
-    let fin = '', intr = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += ' ' + r[0].transcript; else intr += ' ' + r[0].transcript; }
-    if (fin) TS.heard += ' ' + fin;
-    TS.interim = intr; tsLive();
+    const arr = []; let intr = '';
+    for (let i = 0; i < e.results.length; i++) {
+      const r = e.results[i], t = String(r[0].transcript || '').trim(); if (!t) continue;
+      if (!r.isFinal) { intr += ' ' + t; continue; }
+      const last = arr[arr.length - 1];
+      if (last && t.startsWith(last)) arr[arr.length - 1] = t; else if (!last || !last.startsWith(t)) arr.push(t);
+    }
+    TS.cur = arr.join(' '); TS.interim = intr; TS.fails = 0; tsLive();
   };
-  rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { TS.listening = false; toast('لم يُسمح بالميكروفون. اسمح به من إعدادات الموقع في المتصفح.'); TS.phase = 'ready'; tsRender(); } else if (e.error === 'network') { toast('التعرّف على الصوت يحتاج اتصالًا بالإنترنت.'); } };
-  rec.onend = () => { if (TS.listening) { try { rec.start(); } catch (er) {} } };
-  try { rec.start(); } catch (e) { toast('تعذّر تشغيل الميكروفون'); TS.phase = 'ready'; }
-  tsRender();
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { TS.listening = false; toast('لم يُسمح بالميكروفون. اسمح به من إعدادات الموقع في المتصفح.'); TS.phase = 'ready'; tsRender(); }
+    else if (e.error === 'network') { TS.fails++; if (TS.fails > 3) { TS.listening = false; toast('التعرّف على الصوت يحتاج اتصالًا بالإنترنت.'); tsFinish(); } }
+  };
+  rec.onend = () => {
+    TS.heard += ' ' + (TS.cur || ''); TS.cur = ''; TS.interim = '';
+    if (TS.listening) setTimeout(tsSession, 250);
+  };
+  try { rec.start(); } catch (e) { setTimeout(() => { if (TS.listening) tsSession(); }, 600); }
 }
 function tsStop(silent) {
-  TS.listening = false;
+  TS.listening = false; clearTimeout(TS.endT);
   if (TS.rec) { try { TS.rec.onend = null; TS.rec.stop(); } catch (e) {} TS.rec = null; }
+  TS.heard += ' ' + (TS.cur || ''); TS.cur = '';
   if (silent || TS.phase !== 'listen') return;
   setTimeout(tsFinish, 600);
 }
-function tsHyp() { return (TS.heard + ' ' + TS.interim).split(/\s+/).map(qNorm).filter(Boolean); }
+function tsHyp() { return (TS.heard + ' ' + (TS.cur || '') + ' ' + TS.interim).split(/\s+/).map(qNorm).filter(Boolean); }
 function tsLive() {
   const R = tsAlign(TS.words, tsHyp()), done = R.st.filter(x => x.st !== 'miss').length;
   let last = -1; R.st.forEach((x, i) => { if (x.st !== 'miss') last = i; });
   const el = $('#tsLive'); if (el) el.textContent = D(Math.min(TS.words.length, last + 1)) + ' من ' + D(TS.words.length) + ' كلمة';
   const bar = $('#tsBar'); if (bar) bar.style.width = ((last + 1) / TS.words.length * 100).toFixed(1) + '%';
   TS.pos = last + 1;
-  if (TS.pos >= TS.words.length && done >= TS.words.length * 0.9 && TS.listening) { tsStop(); }
+  clearTimeout(TS.endT);
+  if (TS.pos >= TS.words.length && done >= TS.words.length * 0.9 && TS.listening) TS.endT = setTimeout(() => { if (TS.listening) tsStop(); }, 3500);
 }
 function tsFinish() {
   const R = tsAlign(TS.words, tsHyp());
@@ -4065,7 +4083,7 @@ function tsRender() {
   }
   if (TS.phase === 'listen') {
     const next = TS.words[Math.min(TS.words.length - 1, (TS.pos || 0) + TS.hint)];
-    box.innerHTML = '<div class="ls-stage ph-rec"><span class="ls-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span><b>أستمع إليك…</b><small id="tsLive">' + D(0) + ' من ' + D(TS.words.length) + ' كلمة</small><div class="ls-meter ts-prog"><i id="tsBar" style="width:0%"></i></div></div>' +
+    box.innerHTML = '<div class="ls-stage ph-rec"><span class="ls-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span><b>أستمع إليك…</b><small class="ts-calm">خذ وقتك، وتوقّف لتتذكر كما تشاء. لن ينتهي التسميع حتى تضغط «انتهيت»، أو بعد إكمالك آخر آية بثوانٍ.</small><small id="tsLive">' + D(0) + ' من ' + D(TS.words.length) + ' كلمة</small><div class="ls-meter ts-prog"><i id="tsBar" style="width:0%"></i></div></div>' +
       (TS.hint ? '<div class="ts-hint">الكلمة التالية: <b>' + qEsc(next.w) + '</b></div>' : '') +
       '<div class="ls-tools"><button type="button" data-ts="hint">تلميح بالكلمة التالية</button><button type="button" data-ts="stop">انتهيت</button><button type="button" data-ts="cancel">إلغاء</button></div>';
     tsLive(); return;
